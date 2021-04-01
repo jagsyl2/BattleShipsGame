@@ -71,7 +71,7 @@ namespace Battleships
             GetShot(board);
         }
 
-        public void GetShot(string[,] board)
+        private void GetShot(string[,] board)
         {
             bool endOfGame;
             do

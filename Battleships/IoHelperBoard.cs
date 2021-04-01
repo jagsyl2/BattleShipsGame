@@ -1,6 +1,5 @@
 ﻿using BattleShips.BusinessLayer;
 using System;
-using System.Linq;
 
 namespace Battleships
 {

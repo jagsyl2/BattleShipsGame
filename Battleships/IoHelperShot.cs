@@ -13,18 +13,15 @@ namespace Battleships
     public class IoHelperShot : IIoHelperShot
     {
         private readonly IIoHelper _ioHelper;
-        private readonly IIoHelperBoard _ioHelperBoard;
         private readonly IShipService _shipService;
         private readonly IShotService _shotService;
 
         public IoHelperShot(
             IIoHelper ioHelper,
-            IIoHelperBoard ioHelperBoard,
             IShipService shipServic,
             IShotService shotService)
         {
             _ioHelper = ioHelper;
-            _ioHelperBoard = ioHelperBoard;
             _shipService = shipServic;
             _shotService = shotService;
         }
@@ -42,21 +39,21 @@ namespace Battleships
                 {
                     _ioHelper.WriteColorText(ConsoleColor.Red, "Wrong shot format (*example: A5). Try again...");
                     correctShot = false;
+                    continue;
                 }
-                else 
+                if (!int.TryParse(shot.Substring(1, shot.Length - 1), out userShot.Row))
+                {
+                    _ioHelper.WriteColorText(ConsoleColor.Red, "Wrong shot format (*example: A5). Try again...");
+                    correctShot = false;
+                }
+                else
                 {
                     userShot.Column = shot.Substring(0, 1).ToUpper();
                     correctShot = true;
-
-                    if (!int.TryParse(shot.Substring(1, shot.Length - 1), out userShot.Row))
-                    {
-                        _ioHelper.WriteColorText(ConsoleColor.Red, "Wrong shot format (*example: A5). Try again...");
-                        correctShot = false;
-                    }
                 }
-            } 
+            }
             while (!correctShot);
-            
+
             return userShot;
         }
 
@@ -72,13 +69,11 @@ namespace Battleships
                 _ioHelper.WriteColorTextOnCleanConsole(ConsoleColor.DarkBlue, "That's where you've already aimed. Try again...");
                 return;
             }
-            else
-            {
-                ParseShotAtBoard(board, userShot);
-            }
+
+            ParseShotAtBoard(board, userShot);
         }
 
-        public void ParseShotAtBoard(string[,] board, Coordinate userShot)
+        private void ParseShotAtBoard(string[,] board, Coordinate userShot)
         { 
             if (_shipService.CheckIfShotIsHit(userShot))
             {

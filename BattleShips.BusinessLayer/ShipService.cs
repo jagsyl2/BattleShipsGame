@@ -50,7 +50,7 @@ namespace BattleShips.BusinessLayer
 
             CreatListOfShips();
 
-            int downShipId = 1;
+            int addedShipId = 1;
 
             foreach (var ship in _shipList)
             {
@@ -58,16 +58,11 @@ namespace BattleShips.BusinessLayer
 
                 do
                 {
-                    shipAdded = AssignShipCoordinates(board, downShipId, ship, shipAdded);
+                    shipAdded = AssignShipCoordinates(board, addedShipId, ship, shipAdded);
                 }
                 while (!shipAdded);
 
-                downShipId++;
-            }
-
-            foreach (var item in _shipsPositions)                   //do skasowania!!!
-            {
-                Console.WriteLine($"{item.Key.Item1}{item.Key.Item2}-{ item.Value.Ship.Name} -id:{item.Value.Id} -{ item.Value.Down}");
+                addedShipId++;
             }
         }
 
@@ -97,13 +92,13 @@ namespace BattleShips.BusinessLayer
                 shipAdded = true;
 
                 i--;
-                var index = ship.Direction == Direction.Horizontal ? columnIndex <= BoardValue.columnString.Count / 2 ? j++ : j-- : rowIndex <= board.GetLength(0) / 2 ? k++ : k--;
+                _ = ship.Direction == Direction.Horizontal ? columnIndex <= BoardValue.columnString.Count / 2 ? j++ : j-- : rowIndex <= board.GetLength(0) / 2 ? k++ : k--;
             }
 
             return shipAdded;
         }
 
-        private static Coordinate GetCoordinate(int columnIndex, int rowIndex)
+        private Coordinate GetCoordinate(int columnIndex, int rowIndex)
         {
             return new Coordinate()
             {
@@ -111,15 +106,6 @@ namespace BattleShips.BusinessLayer
                 Row = rowIndex
             };
         }
-
-        //private static Coordinate GetHorizontal(int rowIndex, int columnIndex)
-        //{
-        //    return new Coordinate()
-        //    {
-        //        Column = BoardValue.columnString.Keys.ElementAt(columnIndex),
-        //        Row = rowIndex
-        //    };
-        //}
 
         private void RandomStartCoordinateForShip(string[,] board, out int columnIndex, out int rowIndex)
         {
@@ -168,11 +154,6 @@ namespace BattleShips.BusinessLayer
                 .Select(x => x.Value.Id)
                 .FirstOrDefault();
 
-            foreach (var item in _shipsPositions)                   //do skasowania!!!
-            {
-                Console.WriteLine($"{item.Key.Item1}{item.Key.Item2}-{ item.Value.Ship.Name} -id:{item.Value.Id} -{ item.Value.Down}");
-            }
-
             return _shipsPositions
                 .Where(x=>x.Value.Id == shipId)
                 .All(x => x.Value.Down == true);
@@ -183,24 +164,11 @@ namespace BattleShips.BusinessLayer
             _shipsPositions
                 .Where(x => x.Key.Item1 == userShot.Column && x.Key.Item2 == userShot.Row)
                 .SingleOrDefault(x=>x.Value.Down = true);
-
-            foreach (var item in _shipsPositions)                   //do skasowania!!!
-            {
-                Console.WriteLine($"{item.Key.Item1}{item.Key.Item2}-{ item.Value.Ship.Name} -id:{item.Value.Id} -{ item.Value.Down}");
-            }
         }
 
         public bool CheckIfAllShipsSunken()
         {
-            foreach (var item in _shipsPositions)                   //do skasowania!!!
-            {
-                Console.WriteLine($"{item.Key.Item1}{item.Key.Item2}-{ item.Value.Ship.Name} -id:{item.Value.Id} -{ item.Value.Down}");
-            }
-
-
             return _shipsPositions.All(x=>x.Value.Down==true);
-
-
         }
     }
 }
