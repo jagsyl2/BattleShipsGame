@@ -61,19 +61,34 @@ namespace Battleships
 
         private void Play()
         {
-            var columns = new string[10];
-            var rows = new string[10];
             var board = new string[10, 10];
-
-            _ioHelperBoard.AssignValueToColumns(columns);
-            _ioHelperBoard.AssignValueToRows(rows);
             _ioHelperBoard.AssignValueToBoard(board);
 
-            _ioHelperBoard.DrawBoard(columns, rows, board);
+            _ioHelperBoard.DrawBoard(board);
 
-            _shipService.RandomShipPlacement();
+            _shipService.RandomShipPlacement(board);
 
-            _ioHelperShot.GetShot(columns, rows, board);
+            GetShot(board);
+        }
+
+        public void GetShot(string[,] board)
+        {
+            bool endOfGame;
+            do
+            {
+                Console.WriteLine("Take a shot: (*example: A5)");
+
+                var userShot = _ioHelperShot.GetShotFromUser("Your shot:");
+
+                _ioHelperShot.ParseShot(userShot, board);
+
+                _ioHelperBoard.DrawBoard(board);
+
+                endOfGame = _shipService.CheckIfAllShipsSunken() ? true : false;
+            }
+            while (!endOfGame);
+
+            _ioHelper.WriteColorTextOnCleanConsole(ConsoleColor.DarkMagenta, "\t\tWINNER!!!");
         }
     }
 }

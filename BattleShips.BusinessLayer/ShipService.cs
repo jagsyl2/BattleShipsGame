@@ -7,16 +7,16 @@ namespace BattleShips.BusinessLayer
 {
     public interface IShipService
     {
-        void RandomShipPlacement();
-        bool CheckIfShotIsHit(string columnString, string rowString);
-        bool CheckIfShipIsSunken(string columnString, string rowString);
-        void UpdateShipAfterHit(string columnString, string rowString);
+        void RandomShipPlacement(string[,] board);
+        bool CheckIfShotIsHit(Coordinate userShot);
+        bool CheckIfShipIsSunken(Coordinate userShot);
+        void UpdateShipAfterHit(Coordinate userShot);
         bool CheckIfAllShipsSunken();
     }
 
     public class ShipService : IShipService
     {
-        private readonly Dictionary<(string, string), DownShip> _shipsPositions = new Dictionary<(string, string), DownShip>();
+        private readonly Dictionary<(string, int), DownShip> _shipsPositions = new Dictionary<(string, int), DownShip>();
         private readonly List<Ship> _shipList = new List<Ship>();
         
         private Random _random = new Random();
@@ -31,12 +31,6 @@ namespace BattleShips.BusinessLayer
                 Length = 4
             };
 
-            var cruiser = new Ship()
-            {
-                Name = "Cruiser",
-                Length = 4
-            };
-
             var battleship = new Ship()
             {
                 Name = "Battleship",
@@ -44,17 +38,19 @@ namespace BattleShips.BusinessLayer
             };
 
             _shipList.Add(destroyer);
-            _shipList.Add(cruiser);
+            _shipList.Add(destroyer);
             _shipList.Add(battleship);
 
             return _shipList;
         }
 
-        public void RandomShipPlacement()
+        public void RandomShipPlacement(string[,] board)
         {
             _shipsPositions.Clear();
 
             CreatListOfShips();
+
+            int downShipId = 1;
 
             foreach (var ship in _shipList)
             {
@@ -63,13 +59,13 @@ namespace BattleShips.BusinessLayer
                 do
                 {
                     int columnIndex = RandomChoiceOfColumn();
-                    int rowIndex = RandomChoiceOfRow();
+                    int rowIndex = _random.Next(board.GetLength(0));
 
                     RandomChoiceOfDirection(ship);
 
-                    int i = ship.Length;                                                    //czy moze byc taka zmienna?
+                    int i = ship.Length;
 
-                    if (ship.Direction == Direction.horizontal)
+                    if (ship.Direction == Direction.Horizontal)
                     {
                         int j = columnIndex;
 
@@ -78,18 +74,18 @@ namespace BattleShips.BusinessLayer
                             var coordinate = new Coordinate()
                             {
                                 Column = BoardValue.columnString.Keys.ElementAt(j),
-                                Row = BoardValue.rowString.Keys.ElementAt(rowIndex),
+                                Row = rowIndex
                             };
 
                             if (_shipsPositions.ContainsKey((coordinate.Column, coordinate.Row)))
                             {
-                                RemoveShipCoordinates(ship);
+                                RemoveShipCoordinates(downShipId);
 
                                 shipAdded = false;
                                 break;
                             }
 
-                            _shipsPositions.Add((coordinate.Column, coordinate.Row), new DownShip {Ship = ship});
+                            _shipsPositions.Add((coordinate.Column, coordinate.Row), new DownShip { Ship = ship, Id = downShipId });
                             shipAdded = true;
 
                             i--;
@@ -105,35 +101,34 @@ namespace BattleShips.BusinessLayer
                             var coordinate = new Coordinate()
                             {
                                 Column = BoardValue.columnString.Keys.ElementAt(columnIndex),
-                                Row = BoardValue.rowString.Keys.ElementAt(j),
+                                Row = j
                             };
 
                             if (_shipsPositions.ContainsKey((coordinate.Column, coordinate.Row)))
                             {
-                                RemoveShipCoordinates(ship);
+                                RemoveShipCoordinates(downShipId);
 
                                 shipAdded = false;
                                 break;
                             }
 
-                            _shipsPositions.Add((coordinate.Column, coordinate.Row), new DownShip { Ship = ship });
+                            _shipsPositions.Add((coordinate.Column, coordinate.Row), new DownShip { Ship = ship, Id = downShipId });
                             shipAdded = true;
 
                             i--;
-                            var indexValue = rowIndex <= BoardValue.rowString.Count / 2 ? j++ : j--;
+                            var indexValue = rowIndex <= board.GetLength(0) / 2 ? j++ : j--;
                         }
                     }
                 }
                 while (!shipAdded);
+
+                downShipId++;
             }
-        }
 
-        private int RandomChoiceOfRow()
-        {
-            var index = _random.Next(BoardValue.rowString.Count);
-            var rowIndex = BoardValue.rowString.Values.ElementAt(index);
-
-            return rowIndex;
+            foreach (var item in _shipsPositions)                   //do skasowania!!!
+            {
+                Console.WriteLine($"{item.Key.Item1}{item.Key.Item2}-{ item.Value.Ship.Name} -id:{item.Value.Id} -{ item.Value.Down}");
+            }
         }
 
         private int RandomChoiceOfColumn()
@@ -152,10 +147,10 @@ namespace BattleShips.BusinessLayer
             ship.Direction = (Direction)values.GetValue(positionIndex);
         }
 
-        private void RemoveShipCoordinates(Ship ship)
+        private void RemoveShipCoordinates(int downShipId)
         {
             var toRemove = _shipsPositions
-                .Where(x => x.Value.Ship == ship)
+                .Where(x => x.Value.Id == downShipId)
                 .Select(x => x.Key)
                 .ToList();
 
@@ -165,33 +160,51 @@ namespace BattleShips.BusinessLayer
             }
         }
 
-        public bool CheckIfShotIsHit(string columnString, string rowString)
+        public bool CheckIfShotIsHit(Coordinate userShot)
         {
-            return _shipsPositions.Any(x => x.Key.Item1 == columnString && x.Key.Item2 == rowString);
+            return _shipsPositions.Any(x => x.Key.Item1 == userShot.Column && x.Key.Item2 == userShot.Row);
         }
         
-        public bool CheckIfShipIsSunken(string columnString, string rowString)
+        public bool CheckIfShipIsSunken(Coordinate userShot)
         {
-            var ship = _shipsPositions
-                .Where(x => x.Key.Item1 == columnString && x.Key.Item2 == rowString)
-                .Select(x => x.Value.Ship)
+            var shipId = _shipsPositions
+                .Where(x => x.Key.Item1 == userShot.Column && x.Key.Item2 == userShot.Row)
+                .Select(x => x.Value.Id)
                 .FirstOrDefault();
-                
+
+            foreach (var item in _shipsPositions)                   //do skasowania!!!
+            {
+                Console.WriteLine($"{item.Key.Item1}{item.Key.Item2}-{ item.Value.Ship.Name} -id:{item.Value.Id} -{ item.Value.Down}");
+            }
+
             return _shipsPositions
-                .Where(x=>x.Value.Ship == ship)
+                .Where(x=>x.Value.Id == shipId)
                 .All(x => x.Value.Down == true);
         }
 
-        public void UpdateShipAfterHit(string columnString, string rowString)
+        public void UpdateShipAfterHit(Coordinate userShot)
         {
             _shipsPositions
-                .Where(x => x.Key.Item1 == columnString && x.Key.Item2 == rowString)
-                .FirstOrDefault(x=>x.Value.Down = true);
+                .Where(x => x.Key.Item1 == userShot.Column && x.Key.Item2 == userShot.Row)
+                .SingleOrDefault(x=>x.Value.Down = true);
+
+            foreach (var item in _shipsPositions)                   //do skasowania!!!
+            {
+                Console.WriteLine($"{item.Key.Item1}{item.Key.Item2}-{ item.Value.Ship.Name} -id:{item.Value.Id} -{ item.Value.Down}");
+            }
         }
 
         public bool CheckIfAllShipsSunken()
         {
+            foreach (var item in _shipsPositions)                   //do skasowania!!!
+            {
+                Console.WriteLine($"{item.Key.Item1}{item.Key.Item2}-{ item.Value.Ship.Name} -id:{item.Value.Id} -{ item.Value.Down}");
+            }
+
+
             return _shipsPositions.All(x=>x.Value.Down==true);
+
+
         }
     }
 }

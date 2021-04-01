@@ -1,11 +1,13 @@
 ﻿using BattleShips.BusinessLayer;
+using BattleShips.BusinessLayer.Models;
 using System;
 
 namespace Battleships
 {
     public interface IIoHelperShot
     {
-        void GetShot(string[] columns, string[] rows, string[,] board);
+        Coordinate GetShotFromUser(string message);
+        void ParseShot(Coordinate userShot, string[,] board);
     }
 
     public class IoHelperShot : IIoHelperShot
@@ -27,61 +29,71 @@ namespace Battleships
             _shotService = shotService;
         }
 
-        public void GetShot(string[] columns, string[] rows, string[,] board)
+        public Coordinate GetShotFromUser(string message)
         {
-            bool endOfGame = false;
+            bool correctShot;
+            var userShot = new Coordinate();
+
             do
             {
-                Console.WriteLine("Take a shot: (*example: A5)");
+                var shot = _ioHelper.GetStringFromUser(message);
 
-                var userShot = _ioHelper.GetShotFromUser("Your shot:").ToUpper();
+                if (shot.Length != 2)
+                {
+                    _ioHelper.WriteColorText(ConsoleColor.Red, "Wrong shot format (*example: A5). Try again...");
+                    correctShot = false;
+                }
+                else 
+                {
+                    userShot.Column = shot.Substring(0, 1).ToUpper();
+                    correctShot = true;
 
-                ParseShot(userShot, board);
-
-                _ioHelperBoard.DrawBoard(columns, rows, board);
-
-                endOfGame = _shipService.CheckIfAllShipsSunken() ? true : false;
-            }
-            while (!endOfGame);
-
-            _ioHelper.WriteColorText(ConsoleColor.DarkMagenta, "\t\tWINNER!!!");
+                    if (!int.TryParse(shot.Substring(1, shot.Length - 1), out userShot.Row))
+                    {
+                        _ioHelper.WriteColorText(ConsoleColor.Red, "Wrong shot format (*example: A5). Try again...");
+                        correctShot = false;
+                    }
+                }
+            } 
+            while (!correctShot);
+            
+            return userShot;
         }
 
-        private void ParseShot(string userShot, string[,] board)
+        public void ParseShot(Coordinate userShot, string[,] board)
         {
-            if (userShot.Length != 2)
+            if (_shotService.CheckIfShotIsInBoard(userShot, board))
             {
-                _ioHelper.WriteColorText(ConsoleColor.Red, "Wrong shot format. Try again...");
+                _ioHelper.WriteColorTextOnCleanConsole(ConsoleColor.Red, "Shot off the board. Try again...");
                 return;
             }
-
-            var columnString = userShot.Substring(0, 1);
-            var rowString = userShot.Substring(1, userShot.Length - 1);
-
-            if (_shotService.CheckIfShotIsInBoard(columnString, rowString))
+            if (_shotService.CheckIfShotIsRepeated(board, userShot))
             {
-                _ioHelper.WriteColorText(ConsoleColor.Red, "Shot off the board. Try again...");
+                _ioHelper.WriteColorTextOnCleanConsole(ConsoleColor.DarkBlue, "That's where you've already aimed. Try again...");
                 return;
-            }
-            else if (_shipService.CheckIfShotIsHit(columnString, rowString) &&
-                !_shotService.CheckIfShotIsRepeated(board, columnString, rowString))
-            {
-                _shipService.UpdateShipAfterHit(columnString, rowString);
-
-                var message = _shipService.CheckIfShipIsSunken(columnString, rowString) ? "Hit and sink!" : "Hit!";
-                _ioHelper.WriteColorText(ConsoleColor.Green, $"\t{message}");
-
-                _shotService.MarkShotOnBoard(board, columnString, rowString, "X");
-            }
-            else if (_shotService.CheckIfShotIsRepeated(board, columnString, rowString))
-            {
-                _ioHelper.WriteColorText(ConsoleColor.DarkBlue, "That's where you've already aimed. Try again...");
             }
             else
             {
-                _ioHelper.WriteColorText(ConsoleColor.Yellow, "\tMiss!");
+                ParseShotAtBoard(board, userShot);
+            }
+        }
 
-                _shotService.MarkShotOnBoard(board, columnString, rowString, "0");
+        public void ParseShotAtBoard(string[,] board, Coordinate userShot)
+        { 
+            if (_shipService.CheckIfShotIsHit(userShot))
+            {
+                _shipService.UpdateShipAfterHit(userShot);
+
+                var message = _shipService.CheckIfShipIsSunken(userShot) ? "Hit and sink!" : "Hit!";
+                _ioHelper.WriteColorTextOnCleanConsole(ConsoleColor.Green, $"\t{message}");
+
+                _shotService.MarkShotOnBoard(board, userShot, "X");
+            }
+            else
+            {
+                _ioHelper.WriteColorTextOnCleanConsole(ConsoleColor.Yellow, "\tMiss!");
+
+                _shotService.MarkShotOnBoard(board, userShot, "0");
             }
         }
     }

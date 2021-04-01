@@ -1,34 +1,34 @@
-﻿namespace BattleShips.BusinessLayer
+﻿using BattleShips.BusinessLayer.Models;
+
+namespace BattleShips.BusinessLayer
 {
     public interface IShotService
     {
-        bool CheckIfShotIsInBoard(string columnString, string rowString);
-        bool CheckIfShotIsRepeated(string[,] board, string columnString, string rowString);
-        void MarkShotOnBoard(string[,] board, string columnString, string rowString, string sign);
+        bool CheckIfShotIsInBoard(Coordinate userShot, string[,] board);
+        bool CheckIfShotIsRepeated(string[,] board, Coordinate userShot);
+        void MarkShotOnBoard(string[,] board, Coordinate userShot, string sign);
     }
 
     public class ShotService : IShotService
     {
-        public bool CheckIfShotIsInBoard(string columnString, string rowString)
+        public bool CheckIfShotIsInBoard(Coordinate userShot, string[,] board)
         {
-            return !BoardValue.columnString.ContainsKey(columnString) ||
-                !BoardValue.rowString.ContainsKey(rowString);
+            return !BoardValue.columnString.ContainsKey(userShot.Column) ||
+                !(0 <= userShot.Row && userShot.Row <= board.GetLength(0));
         }
 
-        public bool CheckIfShotIsRepeated(string[,] board, string columnString, string rowString)
+        public bool CheckIfShotIsRepeated(string[,] board, Coordinate userShot)
         {
-            var columnIndex = BoardValue.columnString[columnString];
-            var rowIndex = BoardValue.rowString[rowString];
+            var columnIndex = BoardValue.columnString[userShot.Column];
 
-            return board[rowIndex, columnIndex] == "X" || board[rowIndex, columnIndex] == "0" ? true: false;
+            return board[userShot.Row, columnIndex] == "X" || board[userShot.Row, columnIndex] == "0" ? true: false;
         }
 
-        public void MarkShotOnBoard(string[,] board, string columnString, string rowString, string sign)
+        public void MarkShotOnBoard(string[,] board, Coordinate userShot, string sign)
         {
-            var columnIndex = BoardValue.columnString[columnString];
-            var rowIndex = BoardValue.rowString[rowString];
+            var columnIndex = BoardValue.columnString[userShot.Column];
 
-            board[rowIndex, columnIndex] = sign;
+            board[userShot.Row, columnIndex] = sign;
         }
     }
 }

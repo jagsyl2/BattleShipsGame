@@ -4,17 +4,26 @@ namespace Battleships
 {
     public interface IIoHelper
     {
+        void WriteColorTextOnCleanConsole(ConsoleColor color, string message);
         void WriteColorText(ConsoleColor color, string message);
         string GetStringFromUser(string message);
-        public string GetShotFromUser(string message);
         int GetIntFromUser(string message);
     }
 
     public class IoHelper : IIoHelper
     {
-        public void WriteColorText(ConsoleColor color, string message)
+        public void WriteColorTextOnCleanConsole(ConsoleColor color, string message)
         {
             Console.Clear();
+            Console.WriteLine();
+            Console.ForegroundColor = color;
+            Console.WriteLine(message);
+            Console.WriteLine();
+            Console.ResetColor();
+        }
+
+        public void WriteColorText(ConsoleColor color, string message)
+        {
             Console.WriteLine();
             Console.ForegroundColor = color;
             Console.WriteLine(message);
@@ -33,21 +42,6 @@ namespace Battleships
             }
 
             return number;
-        }
-
-        public string GetShotFromUser(string message)
-        {
-            var shot = GetStringFromUser(message);
-
-            while (string.IsNullOrEmpty(shot))
-            {
-                Console.WriteLine("This is not a valid shot format. Try again...");
-                Console.WriteLine();
-
-                shot = GetStringFromUser(message);
-            }
-
-            return shot;
         }
 
         public string GetStringFromUser(string message)

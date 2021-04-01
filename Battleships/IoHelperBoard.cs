@@ -7,9 +7,7 @@ namespace Battleships
     public interface IIoHelperBoard
     {
         void AssignValueToBoard(string[,] board);
-        void AssignValueToColumns(string[] columns);
-        void AssignValueToRows(string[] rows);
-        void DrawBoard(string[] columns, string[] rows, string[,] board);
+        void DrawBoard(string[,] board);
     }
 
     public class IoHelperBoard : IIoHelperBoard
@@ -25,23 +23,7 @@ namespace Battleships
             }
         }
 
-        public void AssignValueToColumns(string[] table)
-        {
-            for (int i = 0; i < table.Length; i++)
-            {
-                table[i] = BoardValue.columnString.Keys.ElementAt(i);
-            }
-        }
-
-        public void AssignValueToRows(string[] table)
-        {
-            for (int i = 0; i < table.Length; i++)
-            {
-                table[i] = BoardValue.rowString.Keys.ElementAt(i);
-            }
-        }
-
-        public void DrawBoard(string[] columns, string[] rows, string[,] board)
+        public void DrawBoard(string[,] board)
         {
             Console.WriteLine("\tBOARD:");
             Console.Write(" |");
@@ -54,7 +36,7 @@ namespace Battleships
 
             for (int x = 0; x < board.GetLength(0); x++)
             {
-                Console.Write($"{rows[x]}|");
+                Console.Write($"{x}|");
 
                 for (int y = 0; y < board.GetLength(1); y++)
                 {

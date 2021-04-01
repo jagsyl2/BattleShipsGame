@@ -2,8 +2,8 @@
 {
     public enum Direction
     {
-        horizontal = 0,
-        vertical = 1,
+        Horizontal = 0,
+        Vertical = 1,
     }
 
     public class Ship
