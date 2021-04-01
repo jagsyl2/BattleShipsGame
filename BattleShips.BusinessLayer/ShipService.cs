@@ -58,67 +58,7 @@ namespace BattleShips.BusinessLayer
 
                 do
                 {
-                    int columnIndex = RandomChoiceOfColumn();
-                    int rowIndex = _random.Next(board.GetLength(0));
-
-                    RandomChoiceOfDirection(ship);
-
-                    int i = ship.Length;
-
-                    if (ship.Direction == Direction.Horizontal)
-                    {
-                        int j = columnIndex;
-
-                        while (i > 0)
-                        {
-                            var coordinate = new Coordinate()
-                            {
-                                Column = BoardValue.columnString.Keys.ElementAt(j),
-                                Row = rowIndex
-                            };
-
-                            if (_shipsPositions.ContainsKey((coordinate.Column, coordinate.Row)))
-                            {
-                                RemoveShipCoordinates(downShipId);
-
-                                shipAdded = false;
-                                break;
-                            }
-
-                            _shipsPositions.Add((coordinate.Column, coordinate.Row), new DownShip { Ship = ship, Id = downShipId });
-                            shipAdded = true;
-
-                            i--;
-                            var indexValue = columnIndex <= BoardValue.columnString.Count / 2 ? j++ : j--;
-                        }
-                    }
-                    else
-                    {
-                        int j = rowIndex;
-
-                        while (i > 0)
-                        {
-                            var coordinate = new Coordinate()
-                            {
-                                Column = BoardValue.columnString.Keys.ElementAt(columnIndex),
-                                Row = j
-                            };
-
-                            if (_shipsPositions.ContainsKey((coordinate.Column, coordinate.Row)))
-                            {
-                                RemoveShipCoordinates(downShipId);
-
-                                shipAdded = false;
-                                break;
-                            }
-
-                            _shipsPositions.Add((coordinate.Column, coordinate.Row), new DownShip { Ship = ship, Id = downShipId });
-                            shipAdded = true;
-
-                            i--;
-                            var indexValue = rowIndex <= board.GetLength(0) / 2 ? j++ : j--;
-                        }
-                    }
+                    shipAdded = AssignShipCoordinates(board, downShipId, ship, shipAdded);
                 }
                 while (!shipAdded);
 
@@ -129,6 +69,62 @@ namespace BattleShips.BusinessLayer
             {
                 Console.WriteLine($"{item.Key.Item1}{item.Key.Item2}-{ item.Value.Ship.Name} -id:{item.Value.Id} -{ item.Value.Down}");
             }
+        }
+
+        private bool AssignShipCoordinates(string[,] board, int downShipId, Ship ship, bool shipAdded)
+        {
+            int columnIndex, rowIndex;
+            RandomStartCoordinateForShip(board, out columnIndex, out rowIndex);
+            RandomChoiceOfDirection(ship);
+
+            int i = ship.Length;
+            int j = columnIndex;
+            int k = rowIndex;
+
+            while (i > 0)
+            {
+                var coordinate = ship.Direction == Direction.Horizontal ? GetCoordinate(j, rowIndex) : GetCoordinate(columnIndex, k);
+
+                if (_shipsPositions.ContainsKey((coordinate.Column, coordinate.Row)))
+                {
+                    RemoveShipCoordinates(downShipId);
+                    shipAdded = false;
+
+                    break;
+                }
+
+                _shipsPositions.Add((coordinate.Column, coordinate.Row), new DownShip { Ship = ship, Id = downShipId });
+                shipAdded = true;
+
+                i--;
+                var index = ship.Direction == Direction.Horizontal ? columnIndex <= BoardValue.columnString.Count / 2 ? j++ : j-- : rowIndex <= board.GetLength(0) / 2 ? k++ : k--;
+            }
+
+            return shipAdded;
+        }
+
+        private static Coordinate GetCoordinate(int columnIndex, int rowIndex)
+        {
+            return new Coordinate()
+            {
+                Column = BoardValue.columnString.Keys.ElementAt(columnIndex),
+                Row = rowIndex
+            };
+        }
+
+        //private static Coordinate GetHorizontal(int rowIndex, int columnIndex)
+        //{
+        //    return new Coordinate()
+        //    {
+        //        Column = BoardValue.columnString.Keys.ElementAt(columnIndex),
+        //        Row = rowIndex
+        //    };
+        //}
+
+        private void RandomStartCoordinateForShip(string[,] board, out int columnIndex, out int rowIndex)
+        {
+            columnIndex = RandomChoiceOfColumn();
+            rowIndex = _random.Next(board.GetLength(0));
         }
 
         private int RandomChoiceOfColumn()

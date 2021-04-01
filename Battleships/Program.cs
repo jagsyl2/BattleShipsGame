@@ -88,7 +88,7 @@ namespace Battleships
             }
             while (!endOfGame);
 
-            _ioHelper.WriteColorTextOnCleanConsole(ConsoleColor.DarkMagenta, "\t\tWINNER!!!");
+            _ioHelper.WriteColorText(ConsoleColor.DarkMagenta, "\t\tWINNER!!!");
         }
     }
 }
